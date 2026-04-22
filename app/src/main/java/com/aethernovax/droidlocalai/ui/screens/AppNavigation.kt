@@ -79,7 +79,7 @@ fun MainAppScreen(chatManager: ChatManager) {
         ) {
             composable("image") { ModelListScreen(navController) }
             composable("chats") { ChatListScreen(chatManager) }
-            composable("projects") { ProjectListScreen() }
+            composable("projects") { ProjectListScreen(navController) }
             composable("models") { ModelsScreen() }
             composable("settings") { SettingsScreen() }
         }
