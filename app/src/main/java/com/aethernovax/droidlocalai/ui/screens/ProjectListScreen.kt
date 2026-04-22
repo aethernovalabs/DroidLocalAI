@@ -2,19 +2,13 @@ package com.aethernovax.droidlocalai.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -40,8 +34,8 @@ fun ProjectListScreen(
     if (showDialog) {
         AddProjectDialog(
             onDismiss = { showDialog = false },
-            onConfirm = { name, desc, prompt, lore ->
-                projectsViewModel.addProject(name, desc, prompt, lore)
+            onConfirm = { name, desc ->
+                projectsViewModel.addProject(name, desc)
                 showDialog = false
             }
         )
@@ -71,10 +65,11 @@ fun ProjectListScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(projects) { project ->
-                ProjectItem(project) {
-                    // Navigasi ke ChatRoom (Akan diimplementasikan di Fase 3)
-                    navController.navigate("chat_room/${project.id}")
-                }
+                ProjectItem(
+                    project = project,
+                    onClick = { navController.navigate("project_detail/${project.id}") },
+                    onDelete = { projectsViewModel.deleteProject(project) }
+                )
             }
             
             if (projects.isEmpty()) {
@@ -92,7 +87,7 @@ fun ProjectListScreen(
 }
 
 @Composable
-fun ProjectItem(project: ProjectEntity, onClick: () -> Unit) {
+fun ProjectItem(project: ProjectEntity, onClick: () -> Unit, onDelete: () -> Unit) {
     Card(
         modifier = Modifier.clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = Color(0xFF222222))
@@ -129,6 +124,9 @@ fun ProjectItem(project: ProjectEntity, onClick: () -> Unit) {
                     maxLines = 1
                 )
             }
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Red)
+            }
             Icon(Icons.Default.ChevronRight, null, tint = Color.White)
         }
     }
@@ -137,12 +135,10 @@ fun ProjectItem(project: ProjectEntity, onClick: () -> Unit) {
 @Composable
 fun AddProjectDialog(
     onDismiss: () -> Unit,
-    onConfirm: (String, String, String, String) -> Unit
+    onConfirm: (String, String) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var systemPrompt by remember { mutableStateOf("") }
-    var lorebook by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -161,23 +157,11 @@ fun AddProjectDialog(
                     label = { Text("Description") },
                     modifier = Modifier.fillMaxWidth()
                 )
-                OutlinedTextField(
-                    value = systemPrompt,
-                    onValueChange = { systemPrompt = it },
-                    label = { Text("System Prompt") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = lorebook,
-                    onValueChange = { lorebook = it },
-                    label = { Text("Lorebook (Context)") },
-                    modifier = Modifier.fillMaxWidth()
-                )
             }
         },
         confirmButton = {
             Button(
-                onClick = { onConfirm(name, description, systemPrompt, lorebook) },
+                onClick = { onConfirm(name, description) },
                 enabled = name.isNotBlank()
             ) {
                 Text("Create")

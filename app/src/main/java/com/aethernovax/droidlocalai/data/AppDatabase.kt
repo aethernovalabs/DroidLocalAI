@@ -6,10 +6,21 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.aethernovax.droidlocalai.data.dao.ChatDao
 import com.aethernovax.droidlocalai.data.dao.ProjectDao
-import com.aethernovax.droidlocalai.data.entities.ChatEntity
+import com.aethernovax.droidlocalai.data.entities.ChatSessionEntity
+import com.aethernovax.droidlocalai.data.entities.MessageEntity
 import com.aethernovax.droidlocalai.data.entities.ProjectEntity
+import com.aethernovax.droidlocalai.data.entities.LorebookKeywordEntity
 
-@Database(entities = [ProjectEntity::class, ChatEntity::class], version = 1, exportSchema = false)
+@Database(
+    entities = [
+        ProjectEntity::class, 
+        ChatSessionEntity::class, 
+        MessageEntity::class,
+        LorebookKeywordEntity::class
+    ],
+    version = 3, // Increment version
+    exportSchema = false
+)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun projectDao(): ProjectDao
     abstract fun chatDao(): ChatDao
@@ -24,7 +35,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "droid_local_ai_database"
-                ).build()
+                )
+                .fallbackToDestructiveMigration()
+                .build()
                 INSTANCE = instance
                 instance
             }

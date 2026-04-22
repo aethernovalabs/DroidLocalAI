@@ -22,9 +22,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.aethernovax.droidlocalai.navigation.Screen
 
-// AppNavigation.kt
 @Composable
 fun MainAppScreen(chatManager: ChatManager) {
     val navController = rememberNavController()
@@ -34,35 +32,30 @@ fun MainAppScreen(chatManager: ChatManager) {
     Scaffold(
         bottomBar = {
             NavigationBar(containerColor = Color.Black) {
-                // 1. Image
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Image, contentDescription = "image") },
                     label = { Text("image") },
                     selected = currentRoute == "image",
-                    onClick = { navController.navigate("image") }
+                    onClick = { navController.navigate("image") },
                 )
-                // 2. Chats
                 NavigationBarItem(
                     icon = { Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = "Chats") },
                     label = { Text("Chats") },
-                    selected = currentRoute == "chats",
+                    selected = currentRoute?.startsWith("chats") == true || currentRoute?.startsWith("chat_room") == true,
                     onClick = { navController.navigate("chats") }
                 )
-                // 3. Project
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Folder, contentDescription = "Project") },
                     label = { Text("Project") },
-                    selected = currentRoute == "projects",
+                    selected = currentRoute?.startsWith("projects") == true || currentRoute?.startsWith("project_detail") == true,
                     onClick = { navController.navigate("projects") }
                 )
-                // 4. Models
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Memory, contentDescription = "Models") },
                     label = { Text("Models") },
                     selected = currentRoute == "models",
                     onClick = { navController.navigate("models") }
                 )
-                // 5. Setting
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Settings, contentDescription = "Setting") },
                     label = { Text("Setting") },
@@ -78,10 +71,26 @@ fun MainAppScreen(chatManager: ChatManager) {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable("image") { ModelListScreen(navController) }
-            composable("chats") { ChatListScreen(chatManager) }
+            composable("chats") { ChatListScreen(navController, chatManager) }
             composable("projects") { ProjectListScreen(navController) }
             composable("models") { ModelsScreen() }
             composable("settings") { SettingsScreen() }
+
+            composable(
+                route = "project_detail/{projectId}",
+                arguments = listOf(navArgument("projectId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val projectId = backStackEntry.arguments?.getLong("projectId") ?: 0L
+                ProjectDetailScreen(projectId = projectId, navController = navController)
+            }
+
+            composable(
+                route = "chat_room/{chatId}",
+                arguments = listOf(navArgument("chatId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val chatId = backStackEntry.arguments?.getLong("chatId") ?: 0L
+                ChatRoomScreen(chatId = chatId, navController = navController)
+            }
         }
     }
 }

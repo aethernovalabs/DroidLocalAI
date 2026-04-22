@@ -8,6 +8,6 @@ data class ProjectEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
     val description: String,
-    val systemPrompt: String,
-    val lorebook: String // Simple string for now, could be JSON
+    val systemPrompt: String = "You are a helpful AI assistant.",
+    val lorebookRag: String = "" // Deskripsi panjang untuk RAG
 )

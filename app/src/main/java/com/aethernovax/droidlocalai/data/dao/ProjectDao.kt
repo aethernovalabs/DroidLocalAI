@@ -1,12 +1,8 @@
 package com.aethernovax.droidlocalai.data.dao
 
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
-import androidx.room.Update
+import androidx.room.*
 import com.aethernovax.droidlocalai.data.entities.ProjectEntity
+import com.aethernovax.droidlocalai.data.entities.LorebookKeywordEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -25,4 +21,14 @@ interface ProjectDao {
 
     @Delete
     suspend fun deleteProject(project: ProjectEntity)
+
+    // Keywords
+    @Query("SELECT * FROM lorebook_keywords WHERE projectId = :projectId")
+    fun getKeywordsByProject(projectId: Long): Flow<List<LorebookKeywordEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertKeyword(keyword: LorebookKeywordEntity)
+
+    @Delete
+    suspend fun deleteKeyword(keyword: LorebookKeywordEntity)
 }
