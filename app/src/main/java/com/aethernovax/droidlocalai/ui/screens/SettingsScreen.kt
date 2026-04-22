@@ -2,6 +2,7 @@ package com.aethernovax.droidlocalai.ui.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
@@ -17,10 +18,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(navController: NavController) {
     Column(modifier = Modifier
         .fillMaxSize()
         .background(Color(0xFF121212))) {
@@ -38,28 +40,45 @@ fun SettingsScreen() {
                 colors = CardDefaults.cardColors(containerColor = Color.Black),
                 border = BorderStroke(1.dp, Color.White)
             ) {
-                SettingsItem(Icons.Default.Settings, "Model Settings")
+                SettingsItem(
+                    icon = Icons.Default.Settings,
+                    title = "Model Settings",
+                    onClick = { navController.navigate("llm_settings") }
+                )
                 HorizontalDivider(color = Color.White)
-                SettingsItem(Icons.Default.Wifi, "Connection Settings")
+                SettingsItem(
+                    icon = Icons.Default.Wifi,
+                    title = "Connection Settings",
+                    onClick = { /* TODO */ }
+                )
             }
             // Group 2
             Card(
                 colors = CardDefaults.cardColors(containerColor = Color.Black),
                 border = BorderStroke(1.dp, Color.White)
             ) {
-                SettingsItem(Icons.Default.Star, "Favorites")
+                SettingsItem(
+                    icon = Icons.Default.Star,
+                    title = "Favorites",
+                    onClick = { /* TODO */ }
+                )
                 HorizontalDivider(color = Color.White)
-                SettingsItem(Icons.Default.Email, "Feedback")
+                SettingsItem(
+                    icon = Icons.Default.Email,
+                    title = "Feedback",
+                    onClick = { /* TODO */ }
+                )
             }
         }
     }
 }
 
 @Composable
-fun SettingsItem(icon: ImageVector, title: String) {
+fun SettingsItem(icon: ImageVector, title: String, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onClick() }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

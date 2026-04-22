@@ -6,24 +6,25 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.aethernovax.droidlocalai.data.dao.ChatDao
 import com.aethernovax.droidlocalai.data.dao.ProjectDao
-import com.aethernovax.droidlocalai.data.entities.ChatSessionEntity
-import com.aethernovax.droidlocalai.data.entities.MessageEntity
-import com.aethernovax.droidlocalai.data.entities.ProjectEntity
-import com.aethernovax.droidlocalai.data.entities.LorebookKeywordEntity
+import com.aethernovax.droidlocalai.data.dao.LlmModelDao
+import com.aethernovax.droidlocalai.data.entities.*
 
 @Database(
     entities = [
         ProjectEntity::class, 
         ChatSessionEntity::class, 
         MessageEntity::class,
-        LorebookKeywordEntity::class
+        LorebookKeywordEntity::class,
+        LorebookRagEntity::class,
+        LlmModelEntity::class
     ],
-    version = 3, // Increment version
+    version = 5, // Increment for LlmModelEntity
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun projectDao(): ProjectDao
     abstract fun chatDao(): ChatDao
+    abstract fun llmModelDao(): LlmModelDao
 
     companion object {
         @Volatile

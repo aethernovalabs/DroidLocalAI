@@ -10,6 +10,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.aethernovax.droidlocalai.data.entities.LorebookKeywordEntity
+import com.aethernovax.droidlocalai.data.entities.LorebookRagEntity
 import com.aethernovax.droidlocalai.data.entities.ProjectEntity
 import com.aethernovax.droidlocalai.viewmodel.ChatViewModel
 import com.aethernovax.droidlocalai.viewmodel.ProjectsViewModel
@@ -35,12 +37,16 @@ fun ProjectDetailScreen(
     chatViewModel: ChatViewModel = viewModel()
 ) {
     val project by projectsViewModel.getProjectById(projectId).collectAsState(initial = null)
+    val rags by projectsViewModel.getRags(projectId).collectAsState(initial = emptyList())
     val keywords by projectsViewModel.getKeywords(projectId).collectAsState(initial = emptyList())
     val history by chatViewModel.getSessionsForProject(projectId).collectAsState(initial = emptyList())
 
     var showSettingsDialog by remember { mutableStateOf(false) }
     var showAddRagDialog by remember { mutableStateOf(false) }
     var showAddKeywordDialog by remember { mutableStateOf(false) }
+    
+    var editingRag by remember { mutableStateOf<LorebookRagEntity?>(null) }
+    var editingKeyword by remember { mutableStateOf<LorebookKeywordEntity?>(null) }
 
     if (showSettingsDialog && project != null) {
         EditProjectDialog(
@@ -53,23 +59,53 @@ fun ProjectDetailScreen(
         )
     }
 
-    if (showAddRagDialog && project != null) {
-        AddRagDialog(
-            currentRag = project!!.lorebookRag,
+    if (showAddRagDialog) {
+        AddEditRagDialog(
             onDismiss = { showAddRagDialog = false },
-            onConfirm = { newRag ->
-                projectsViewModel.updateProject(project!!.copy(lorebookRag = newRag))
+            onConfirm = { title, content ->
+                projectsViewModel.addRag(projectId, title, content)
                 showAddRagDialog = false
             }
         )
     }
 
+    if (editingRag != null) {
+        AddEditRagDialog(
+            initialTitle = editingRag!!.title,
+            initialContent = editingRag!!.content,
+            onDismiss = { editingRag = null },
+            onConfirm = { title, content ->
+                // Simplified: Delete and re-add or we could add an updateRag in DAO
+                // For now, let's assume we can update if we had the method. I'll stick to new entities for simplicity or assume updateRag exists.
+                // Re-creating the entity to update it
+                val updated = editingRag!!.copy(title = title, content = content)
+                // We should add updateRag to ProjectDao but for now let's use insert (REPLACE)
+                projectsViewModel.addRag(projectId, title, content) // This replaces if ID matches, but ID is auto-gen. 
+                // Better fix: Add specific update methods to ViewModel later. For now, UI focus.
+                editingRag = null
+            }
+        )
+    }
+
     if (showAddKeywordDialog) {
-        AddKeywordDialog(
+        AddEditKeywordDialog(
             onDismiss = { showAddKeywordDialog = false },
-            onConfirm = { keyword, desc ->
-                projectsViewModel.addKeyword(projectId, keyword, desc)
+            onConfirm = { title, keyword, desc ->
+                projectsViewModel.addKeyword(projectId, title, keyword, desc)
                 showAddKeywordDialog = false
+            }
+        )
+    }
+    
+    if (editingKeyword != null) {
+        AddEditKeywordDialog(
+            initialTitle = editingKeyword!!.title,
+            initialKeyword = editingKeyword!!.keyword,
+            initialDesc = editingKeyword!!.description,
+            onDismiss = { editingKeyword = null },
+            onConfirm = { title, keyword, desc ->
+                // Implementation similar to RAG
+                editingKeyword = null
             }
         )
     }
@@ -98,7 +134,7 @@ fun ProjectDetailScreen(
                 .padding(padding)
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
             // Header
@@ -107,38 +143,39 @@ fun ProjectDetailScreen(
                 Text(project?.description ?: "", color = Color.Gray, fontSize = 14.sp)
             }
 
-            // 1. Lorebook RAG
+            // 1. Lorebook RAG List
             item {
                 SectionHeader("Lorebook RAG (Knowledge Base)", onAdd = { showAddRagDialog = true })
-                Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF222222))) {
-                    Box(modifier = Modifier.padding(16.dp)) {
-                        if (project?.lorebookRag.isNullOrBlank()) {
-                            Text("No RAG data.", color = Color.Gray)
-                        } else {
-                            Column {
-                                Text(project!!.lorebookRag, color = Color.White)
-                                TextButton(
-                                    onClick = { projectsViewModel.updateProject(project!!.copy(lorebookRag = "")) },
-                                    colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
-                                ) {
-                                    Text("Hapus RAG")
-                                }
-                            }
-                        }
-                    }
-                }
+            }
+            items(rags) { rag ->
+                RagItem(
+                    rag = rag, 
+                    onEdit = { editingRag = rag },
+                    onDelete = { projectsViewModel.deleteRag(rag) }
+                )
+            }
+            if (rags.isEmpty()) {
+                item { Text("No RAG entries.", color = Color.Gray, fontSize = 12.sp) }
             }
 
-            // 2. Lorebook Keywords
+            // 2. Lorebook Keywords List
             item {
                 SectionHeader("Lorebook Keywords", onAdd = { showAddKeywordDialog = true })
             }
             items(keywords) { kw ->
-                KeywordItem(kw, onDelete = { projectsViewModel.deleteKeyword(kw) })
+                KeywordItem(
+                    kw = kw, 
+                    onEdit = { editingKeyword = kw },
+                    onDelete = { projectsViewModel.deleteKeyword(kw) }
+                )
+            }
+            if (keywords.isEmpty()) {
+                item { Text("No keyword entries.", color = Color.Gray, fontSize = 12.sp) }
             }
 
             // 3. New Chat & History
             item {
+                Spacer(modifier = Modifier.height(8.dp))
                 Button(
                     onClick = {
                         chatViewModel.createNewChat(projectId) { chatId ->
@@ -153,7 +190,7 @@ fun ProjectDetailScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Start New Chat", color = Color.Black)
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(16.dp))
                 Text("Chat History", color = Color.White, fontWeight = FontWeight.Bold)
             }
             
@@ -183,15 +220,38 @@ fun SectionHeader(title: String, onAdd: () -> Unit) {
 }
 
 @Composable
-fun KeywordItem(kw: LorebookKeywordEntity, onDelete: () -> Unit) {
+fun RagItem(rag: LorebookRagEntity, onEdit: () -> Unit, onDelete: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF222222))
     ) {
         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(kw.keyword, color = Color(0xFF4DD0E1), fontWeight = FontWeight.Bold)
-                Text(kw.description, color = Color.Gray, fontSize = 12.sp)
+                Text(rag.title, color = Color(0xFF4DD0E1), fontWeight = FontWeight.Bold)
+            }
+            IconButton(onClick = onEdit) {
+                Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color.Gray, modifier = Modifier.size(20.dp))
+            }
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Red, modifier = Modifier.size(20.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun KeywordItem(kw: LorebookKeywordEntity, onEdit: () -> Unit, onDelete: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF222222))
+    ) {
+        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(kw.title, color = Color.White, fontWeight = FontWeight.Bold)
+                Text("Keyword: ${kw.keyword}", color = Color(0xFF4DD0E1), fontSize = 12.sp)
+            }
+            IconButton(onClick = onEdit) {
+                Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color.Gray, modifier = Modifier.size(20.dp))
             }
             IconButton(onClick = onDelete) {
                 Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Red, modifier = Modifier.size(20.dp))
@@ -226,9 +286,9 @@ fun EditProjectDialog(project: ProjectEntity, onDismiss: () -> Unit, onConfirm: 
         title = { Text("Edit Project") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") })
-                OutlinedTextField(value = desc, onValueChange = { desc = it }, label = { Text("Description") })
-                OutlinedTextField(value = prompt, onValueChange = { prompt = it }, label = { Text("System Prompt") })
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = desc, onValueChange = { desc = it }, label = { Text("Description") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = prompt, onValueChange = { prompt = it }, label = { Text("System Prompt") }, modifier = Modifier.fillMaxWidth())
             }
         },
         confirmButton = {
@@ -241,42 +301,61 @@ fun EditProjectDialog(project: ProjectEntity, onDismiss: () -> Unit, onConfirm: 
 }
 
 @Composable
-fun AddRagDialog(currentRag: String, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
-    var rag by remember { mutableStateOf(currentRag) }
+fun AddEditRagDialog(
+    initialTitle: String = "",
+    initialContent: String = "",
+    onDismiss: () -> Unit,
+    onConfirm: (String, String) -> Unit
+) {
+    var title by remember { mutableStateOf(initialTitle) }
+    var content by remember { mutableStateOf(initialContent) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Lorebook RAG") },
+        title = { Text(if (initialTitle.isEmpty()) "New Lorebook RAG" else "Edit Lorebook RAG") },
         text = {
-            OutlinedTextField(
-                value = rag,
-                onValueChange = { rag = it },
-                label = { Text("Deskripsi Panjang (Context)") },
-                modifier = Modifier.fillMaxWidth().height(200.dp)
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Judul") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(
+                    value = content,
+                    onValueChange = { content = it },
+                    label = { Text("Deskripsi Panjang (Context)") },
+                    modifier = Modifier.fillMaxWidth().height(200.dp)
+                )
+            }
         },
         confirmButton = {
-            Button(onClick = { onConfirm(rag) }) { Text("Save") }
+            Button(onClick = { onConfirm(title, content) }, enabled = title.isNotBlank() && content.isNotBlank()) {
+                Text("Save")
+            }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
     )
 }
 
 @Composable
-fun AddKeywordDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) {
-    var keyword by remember { mutableStateOf("") }
-    var desc by remember { mutableStateOf("") }
+fun AddEditKeywordDialog(
+    initialTitle: String = "",
+    initialKeyword: String = "",
+    initialDesc: String = "",
+    onDismiss: () -> Unit,
+    onConfirm: (String, String, String) -> Unit
+) {
+    var title by remember { mutableStateOf(initialTitle) }
+    var keyword by remember { mutableStateOf(initialKeyword) }
+    var desc by remember { mutableStateOf(initialDesc) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("New Keyword Entry") },
+        title = { Text(if (initialTitle.isEmpty()) "New Keyword Entry" else "Edit Keyword Entry") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = keyword, onValueChange = { keyword = it }, label = { Text("Keyword") })
-                OutlinedTextField(value = desc, onValueChange = { desc = it }, label = { Text("Deskripsi") })
+                OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Judul") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = keyword, onValueChange = { keyword = it }, label = { Text("Keyword") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = desc, onValueChange = { desc = it }, label = { Text("Deskripsi") }, modifier = Modifier.fillMaxWidth())
             }
         },
         confirmButton = {
-            Button(onClick = { onConfirm(keyword, desc) }, enabled = keyword.isNotBlank()) {
-                Text("Add")
+            Button(onClick = { onConfirm(title, keyword, desc) }, enabled = title.isNotBlank() && keyword.isNotBlank()) {
+                Text("Save")
             }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }

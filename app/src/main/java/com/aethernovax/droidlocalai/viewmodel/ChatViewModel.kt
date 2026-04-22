@@ -6,17 +6,17 @@ import androidx.lifecycle.viewModelScope
 import com.aethernovax.droidlocalai.data.AppDatabase
 import com.aethernovax.droidlocalai.data.entities.ChatSessionEntity
 import com.aethernovax.droidlocalai.data.entities.MessageEntity
-import com.aethernovax.droidlocalai.data.entities.ProjectEntity
+import com.aethernovax.droidlocalai.engine.LlamaEngine
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val database = AppDatabase.getDatabase(application)
     private val chatDao = database.chatDao()
     private val projectDao = database.projectDao()
+    private val llmModelDao = database.llmModelDao()
+    private val llamaEngine = LlamaEngine()
 
     val allSessions: Flow<List<ChatSessionEntity>> = chatDao.getAllSessions()
 
@@ -67,14 +67,70 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     fun sendMessage(chatId: Long, content: String) {
         if (content.isBlank()) return
+        
         viewModelScope.launch {
+            // 1. Save user message
             chatDao.insertMessage(
                 MessageEntity(chatId = chatId, role = "user", content = content)
             )
-            // Simulating AI
+
+            // 2. Ensure Model is Loaded
+            if (LlamaEngine.isLibraryLoaded) {
+                val selectedModel = llmModelDao.getSelectedModel()
+                if (selectedModel != null) {
+                    // Try loading if not already loaded (implementation simplified)
+                    llamaEngine.loadModelSafe(selectedModel.path)
+                }
+            }
+
+            // 3. Build Context (System Prompt + RAG + Keywords)
+            val sessions = allSessions.first()
+            val session = sessions.find { it.id == chatId } ?: return@launch
+            val project = projectDao.getProjectById(session.projectId) ?: return@launch
+            
+            val rags = projectDao.getRagsByProject(project.id).first()
+            val keywords = projectDao.getKeywordsByProject(project.id).first()
+
+            val fullPrompt = buildString {
+                append("System: ${project.systemPrompt}\n\n")
+                
+                if (rags.isNotEmpty()) {
+                    append("Knowledge Base (RAG):\n")
+                    rags.forEach { append("- ${it.title}: ${it.content}\n") }
+                    append("\n")
+                }
+
+                val matchedKeywords = keywords.filter { 
+                    content.contains(it.keyword, ignoreCase = true) 
+                }
+                if (matchedKeywords.isNotEmpty()) {
+                    append("Relevant Context:\n")
+                    matchedKeywords.forEach { append("- ${it.keyword}: ${it.description}\n") }
+                    append("\n")
+                }
+
+                append("User: $content\n")
+                append("Assistant: ")
+            }
+
+            // 4. Call Llama Engine
+            val aiResponse = if (LlamaEngine.isLibraryLoaded) {
+                llamaEngine.generateResponseSafe(fullPrompt) { token ->
+                    // TODO: Update UI in real-time
+                }
+            } else {
+                "Error: AI Engine (llama.cpp) library failed to load. Please check your NDK build."
+            }
+
+            // 5. Save AI response
             chatDao.insertMessage(
-                MessageEntity(chatId = chatId, role = "assistant", content = "Echo: $content")
+                MessageEntity(chatId = chatId, role = "assistant", content = aiResponse)
             )
         }
+    }
+    
+    override fun onCleared() {
+        super.onCleared()
+        llamaEngine.unloadModelSafe()
     }
 }

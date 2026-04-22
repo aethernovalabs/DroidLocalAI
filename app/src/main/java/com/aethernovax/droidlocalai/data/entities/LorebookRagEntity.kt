@@ -6,7 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "lorebook_keywords",
+    tableName = "lorebook_rags",
     foreignKeys = [
         ForeignKey(
             entity = ProjectEntity::class,
@@ -17,10 +17,9 @@ import androidx.room.PrimaryKey
     ],
     indices = [Index(value = ["projectId"])]
 )
-data class LorebookKeywordEntity(
+data class LorebookRagEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val projectId: Long,
-    val title: String, // Added title for organization
-    val keyword: String,
-    val description: String
+    val title: String,
+    val content: String
 )

@@ -1,31 +1,28 @@
 package com.aethernovax.droidlocalai.viewmodel
 
+import android.app.Application
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.widget.Toast
-import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.aethernovax.droidlocalai.data.AppDatabase
+import com.aethernovax.droidlocalai.data.entities.LlmModelEntity
+import com.aethernovax.droidlocalai.engine.LlamaEngine
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 
-data class ModelInfo(
-    val name: String,
-    val path: String,
-    val size: String = "Unknown",
-    val type: String = "GGUF",
-    val isInstalled: Boolean = true,
-)
-
-class ModelsViewModel : ViewModel() {
-    private val _models = MutableStateFlow<List<ModelInfo>>(emptyList())
-    val models: StateFlow<List<ModelInfo>> = _models.asStateFlow()
+class ModelsViewModel(application: Application) : AndroidViewModel(application) {
+    private val llmModelDao = AppDatabase.getDatabase(application).llmModelDao()
+    private val llamaEngine = LlamaEngine()
+    
+    val models: Flow<List<LlmModelEntity>> = llmModelDao.getAllModels()
 
     fun addModel(context: Context, uri: Uri) {
         val fileName = getFileName(context, uri) ?: "Unknown Model"
         
-        // Filter extension .gguf
         if (!fileName.lowercase().endsWith(".gguf")) {
             Toast.makeText(context, "Hanya file .gguf yang diperbolehkan!", Toast.LENGTH_SHORT).show()
             return
@@ -33,16 +30,38 @@ class ModelsViewModel : ViewModel() {
 
         val fileSize = getFileSize(context, uri) ?: "Unknown Size"
 
-        val newModel = ModelInfo(
-            name = fileName,
-            path = uri.toString(),
-            size = fileSize
-        )
-        _models.value += newModel
+        viewModelScope.launch {
+            val newModel = LlmModelEntity(
+                name = fileName,
+                path = uri.toString(),
+                size = fileSize
+            )
+            llmModelDao.insertModel(newModel)
+        }
     }
 
-    fun removeModel(model: ModelInfo) {
-        _models.value = _models.value.filter { it.path != model.path }
+    fun selectAndLoadModel(context: Context, model: LlmModelEntity) {
+        viewModelScope.launch {
+            // 1. Update selection in DB
+            llmModelDao.deselectAll()
+            llmModelDao.selectModel(model.id)
+            
+            // 2. Try to load it into the engine
+            // Note: In a real app, you might want to do this on a background thread
+            // or inside ChatViewModel when chat starts.
+            val success = llamaEngine.loadModelSafe(model.path)
+            if (success) {
+                Toast.makeText(context, "Model ${model.name} loaded successfully!", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "Failed to load ${model.name}. Check NDK build.", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    fun removeModel(model: LlmModelEntity) {
+        viewModelScope.launch {
+            llmModelDao.deleteModel(model)
+        }
     }
 
     private fun getFileName(context: Context, uri: Uri): String? {
@@ -80,8 +99,8 @@ class ModelsViewModel : ViewModel() {
         val df = DecimalFormat("#.##")
         return when {
             size < 1024 -> "${size}B"
-            size < (1024 * 1024) -> "${df.format(size / 1024.0)}KB"
-            size < (1024 * 1024 * 1024) -> "${df.format(size / (1024.0 * 1024.0))}MB"
+            size < 1024 * 1024 -> "${df.format(size / 1024.0)}KB"
+            size < 1024 * 1024 * 1024 -> "${df.format(size / (1024.0 * 1024.0))}MB"
             else -> "${df.format(size / (1024.0 * 1024.0 * 1024.0))}GB"
         }
     }

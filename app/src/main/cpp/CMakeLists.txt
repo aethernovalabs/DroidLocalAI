@@ -199,3 +199,13 @@ target_link_libraries(${PROJECT_NAME}
     tokenizers_cpp
     libzstd
 )
+
+# --- llama.cpp Integration (Phase 4) ---
+add_subdirectory(3rdparty/llama.cpp)
+add_library(llama-android SHARED llama-android.cpp)
+target_link_libraries(llama-android
+    PRIVATE
+    ${PLATFORM_LIBS}
+    llama
+)
+

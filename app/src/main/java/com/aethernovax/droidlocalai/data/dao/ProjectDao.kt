@@ -3,6 +3,7 @@ package com.aethernovax.droidlocalai.data.dao
 import androidx.room.*
 import com.aethernovax.droidlocalai.data.entities.ProjectEntity
 import com.aethernovax.droidlocalai.data.entities.LorebookKeywordEntity
+import com.aethernovax.droidlocalai.data.entities.LorebookRagEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -31,4 +32,14 @@ interface ProjectDao {
 
     @Delete
     suspend fun deleteKeyword(keyword: LorebookKeywordEntity)
+
+    // RAGs
+    @Query("SELECT * FROM lorebook_rags WHERE projectId = :projectId")
+    fun getRagsByProject(projectId: Long): Flow<List<LorebookRagEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertRag(rag: LorebookRagEntity)
+
+    @Delete
+    suspend fun deleteRag(rag: LorebookRagEntity)
 }

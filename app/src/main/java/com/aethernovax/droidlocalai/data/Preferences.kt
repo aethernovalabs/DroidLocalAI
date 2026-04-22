@@ -33,6 +33,41 @@ class GenerationPreferences(private val context: Context) {
     private val BASE_URL_KEY = stringPreferencesKey("base_url")
     private val SELECTED_SOURCE_KEY = stringPreferencesKey("selected_source")
 
+    // LLM Generation Settings
+    private val LLM_TEMPERATURE = floatPreferencesKey("llm_temperature")
+    private val LLM_TOP_P = floatPreferencesKey("llm_top_p")
+    private val LLM_TOP_K = intPreferencesKey("llm_top_k")
+    private val LLM_CONTEXT_SIZE = intPreferencesKey("llm_context_size")
+    private val LLM_MAX_TOKENS = intPreferencesKey("llm_max_tokens")
+
+    val llmSettings: Flow<LlmPrefs> = context.dataStore.data
+        .catch { exception ->
+            if (exception is IOException) {
+                emit(emptyPreferences())
+            } else {
+                throw exception
+            }
+        }
+        .map { prefs ->
+            LlmPrefs(
+                temperature = prefs[LLM_TEMPERATURE] ?: 0.7f,
+                topP = prefs[LLM_TOP_P] ?: 0.9f,
+                topK = prefs[LLM_TOP_K] ?: 40,
+                contextSize = prefs[LLM_CONTEXT_SIZE] ?: 2048,
+                maxTokens = prefs[LLM_MAX_TOKENS] ?: 512
+            )
+        }
+
+    suspend fun updateLlmSettings(settings: LlmPrefs) {
+        context.dataStore.edit { prefs ->
+            prefs[LLM_TEMPERATURE] = settings.temperature
+            prefs[LLM_TOP_P] = settings.topP
+            prefs[LLM_TOP_K] = settings.topK
+            prefs[LLM_CONTEXT_SIZE] = settings.contextSize
+            prefs[LLM_MAX_TOKENS] = settings.maxTokens
+        }
+    }
+
     suspend fun saveBaseUrl(url: String) {
         context.dataStore.edit { preferences ->
             preferences[BASE_URL_KEY] = url
@@ -150,4 +185,12 @@ data class GenerationPrefs(
     val useOpenCL: Boolean = false,
     val batchCounts: Int = 1,
     val scheduler: String = "dpm"
+)
+
+data class LlmPrefs(
+    val temperature: Float = 0.7f,
+    val topP: Float = 0.9f,
+    val topK: Int = 40,
+    val contextSize: Int = 2048,
+    val maxTokens: Int = 512
 )

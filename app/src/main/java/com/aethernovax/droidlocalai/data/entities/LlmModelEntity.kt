@@ -3,10 +3,12 @@ package com.aethernovax.droidlocalai.data.entities
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "projects")
-data class ProjectEntity(
+@Entity(tableName = "llm_models")
+data class LlmModelEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
-    val description: String,
-    val systemPrompt: String = "You are a helpful AI assistant."
+    val path: String,
+    val size: String,
+    val type: String = "GGUF",
+    val isSelected: Boolean = false
 )

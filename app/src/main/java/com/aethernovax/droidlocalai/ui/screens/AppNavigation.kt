@@ -74,7 +74,8 @@ fun MainAppScreen(chatManager: ChatManager) {
             composable("chats") { ChatListScreen(navController, chatManager) }
             composable("projects") { ProjectListScreen(navController) }
             composable("models") { ModelsScreen() }
-            composable("settings") { SettingsScreen() }
+            composable("settings") { SettingsScreen(navController) }
+            composable("llm_settings") { LlmSettingsScreen(navController) }
 
             composable(
                 route = "project_detail/{projectId}",
