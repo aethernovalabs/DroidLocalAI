@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 // Pastikan kamu mengimpor ChatManager yang sudah kita bahas sebelumnya
-// import com.namapaketkamu.localdream.ChatManager
+// import com.namapaketkamu.droidlocalai.ChatManager
 
 @Composable
 fun ChatScreen(chatManager: ChatManager) {

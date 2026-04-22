@@ -91,7 +91,7 @@ fun MainAppScreen(chatManager: ChatManager) {
             startDestination = "chat",
             modifier = Modifier.padding(innerPadding)
         ) {
-            // Rute Fitur Gambar (Local Dream)
+            // Rute Fitur Gambar (DroidLocalAI)
             composable(Screen.ModelList.route) {
                 ModelListScreen(navController)
             }

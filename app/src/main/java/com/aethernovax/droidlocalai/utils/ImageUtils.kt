@@ -232,7 +232,7 @@ suspend fun saveImage(
                     put(MediaStore.Images.Media.MIME_TYPE, mimeType)
                     put(
                         MediaStore.Images.Media.RELATIVE_PATH,
-                        Environment.DIRECTORY_PICTURES + "/LocalDream"
+                        Environment.DIRECTORY_PICTURES + "/DroidLocalAI"
                     )
                 }
 
@@ -260,7 +260,7 @@ suspend fun saveImage(
                     Environment.getExternalStoragePublicDirectory(
                         Environment.DIRECTORY_PICTURES
                     ),
-                    "LocalDream"
+                    "DroidLocalAI"
                 )
 
                 if (!imagesDir.exists()) {

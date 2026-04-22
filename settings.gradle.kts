@@ -23,5 +23,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "LocalDream"
+rootProject.name = "DroidLocalAI"
 include(":app")

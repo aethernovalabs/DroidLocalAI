@@ -29,7 +29,7 @@
         android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.LocalDream">
+        android:theme="@style/Theme.DroidLocalAI">
 
         <activity
             android:name=".MainActivity"
@@ -37,7 +37,7 @@
             android:exported="true"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.LocalDream">
+            android:theme="@style/Theme.DroidLocalAI">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

@@ -17,7 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import com.aethernovax.droidlocalai.ui.screens.ChatManager
 import com.aethernovax.droidlocalai.ui.screens.MainAppScreen
-import com.aethernovax.droidlocalai.ui.theme.LocalDreamTheme
+import com.aethernovax.droidlocalai.ui.theme.DroidLocalAITheme
 
 class MainActivity : ComponentActivity() {
     private val requestStoragePermissionLauncher = registerForActivityResult(
@@ -100,7 +100,7 @@ class MainActivity : ComponentActivity() {
         checkNotificationPermission()
 
         setContent {
-            LocalDreamTheme {
+            DroidLocalAITheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

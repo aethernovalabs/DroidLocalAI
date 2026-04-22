@@ -296,7 +296,7 @@ fun ModelListScreen(
                 ) {
                     val context = LocalContext.current
                     val mustReadText = stringResource(R.string.must_read)
-                    val githubUrl = "https://github.com/xororz/local-dream"
+                    val githubUrl = "https://github.com/xororz/DroidLocalAI"
 
                     val annotatedString = buildAnnotatedString {
                         val fullText = mustReadText
@@ -417,7 +417,7 @@ fun ModelListScreen(
                 TextButton(onClick = {
                     val timestamp = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US)
                         .format(Date())
-                    val filename = "local_dream_log_$timestamp.log"
+                    val filename = "droid_local_ai_log_$timestamp.log"
                     scope.launch(Dispatchers.IO) {
                         val savedPath = try {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -426,7 +426,7 @@ fun ModelListScreen(
                                     put(MediaStore.Downloads.MIME_TYPE, "text/plain")
                                     put(
                                         MediaStore.Downloads.RELATIVE_PATH,
-                                        Environment.DIRECTORY_DOWNLOADS + "/LocalDream"
+                                        Environment.DIRECTORY_DOWNLOADS + "/DroidLocalAI"
                                     )
                                 }
                                 val resolver = context.contentResolver
@@ -437,13 +437,13 @@ fun ModelListScreen(
                                 resolver.openOutputStream(uri)?.use { out ->
                                     out.write(capturedLogs.toByteArray(Charsets.UTF_8))
                                 } ?: throw java.io.IOException("openOutputStream failed")
-                                "Downloads/LocalDream/$filename"
+                                "Downloads/DroidLocalAI/$filename"
                             } else {
                                 val dir = File(
                                     Environment.getExternalStoragePublicDirectory(
                                         Environment.DIRECTORY_DOWNLOADS
                                     ),
-                                    "LocalDream"
+                                    "DroidLocalAI"
                                 )
                                 if (!dir.exists()) dir.mkdirs()
                                 val file = File(dir, filename)
@@ -665,7 +665,7 @@ fun ModelListScreen(
             LargeTopAppBar(
                 title = {
                     Column {
-                        Text("Local Dream✨")
+                        Text("DroidLocalAI✨")
                         Text(
                             if (isSelectionMode) stringResource(
                                 R.string.selected_items,
