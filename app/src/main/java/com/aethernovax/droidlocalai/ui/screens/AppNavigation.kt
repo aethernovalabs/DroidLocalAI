@@ -22,6 +22,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.aethernovax.droidlocalai.navigation.Screen
 
 @Composable
 fun MainAppScreen(chatManager: ChatManager) {
@@ -35,58 +36,77 @@ fun MainAppScreen(chatManager: ChatManager) {
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Image, contentDescription = "image") },
                     label = { Text("image") },
-                    selected = currentRoute == "image",
-                    onClick = { navController.navigate("image") },
+                    selected = currentRoute == Screen.ImageModelList.route,
+                    onClick = { navController.navigate(Screen.ImageModelList.route) },
                 )
                 NavigationBarItem(
                     icon = { Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = "Chats") },
                     label = { Text("Chats") },
-                    selected = currentRoute?.startsWith("chats") == true || currentRoute?.startsWith("chat_room") == true,
-                    onClick = { navController.navigate("chats") }
+                    selected = currentRoute == Screen.TextAiChats.route || currentRoute == Screen.TextAiChatRoom.route,
+                    onClick = { navController.navigate(Screen.TextAiChats.route) }
                 )
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Folder, contentDescription = "Project") },
                     label = { Text("Project") },
-                    selected = currentRoute?.startsWith("projects") == true || currentRoute?.startsWith("project_detail") == true,
-                    onClick = { navController.navigate("projects") }
+                    selected = currentRoute == Screen.TextAiProjects.route || currentRoute == Screen.TextAiProjectDetail.route,
+                    onClick = { navController.navigate(Screen.TextAiProjects.route) }
                 )
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Memory, contentDescription = "Models") },
                     label = { Text("Models") },
-                    selected = currentRoute == "models",
-                    onClick = { navController.navigate("models") }
+                    selected = currentRoute == Screen.TextAiLocalModels.route,
+                    onClick = { navController.navigate(Screen.TextAiLocalModels.route) }
                 )
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Settings, contentDescription = "Setting") },
                     label = { Text("Setting") },
-                    selected = currentRoute == "settings",
-                    onClick = { navController.navigate("settings") }
+                    selected = currentRoute == Screen.TextAiSettings.route,
+                    onClick = { navController.navigate(Screen.TextAiSettings.route) }
                 )
             }
         }
     ) { innerPadding ->
         NavHost(
             navController,
-            startDestination = "chats",
+            startDestination = Screen.TextAiChats.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable("image") { ModelListScreen(navController) }
-            composable("chats") { ChatListScreen(navController, chatManager) }
-            composable("projects") { ProjectListScreen(navController) }
-            composable("models") { ModelsScreen() }
-            composable("settings") { SettingsScreen(navController) }
-            composable("llm_settings") { LlmSettingsScreen(navController) }
+            composable(Screen.ImageModelList.route) { ImageModelListScreen(navController) }
+            composable(Screen.TextAiChats.route) { ChatListScreen(navController, chatManager) }
+            composable(Screen.TextAiProjects.route) { TextModelProjectListScreen(navController) }
+            composable(Screen.TextAiLocalModels.route) { TextModelLocalModelsScreen() }
+            composable(Screen.TextAiSettings.route) { TextModelSettingsScreen(navController) }
+            composable(Screen.TextAiLlmSettings.route) { TextModelLlmSettingsScreen(navController) }
 
             composable(
-                route = "project_detail/{projectId}",
-                arguments = listOf(navArgument("projectId") { type = NavType.LongType })
+                route = Screen.ImageModelRun.route,
+                arguments = listOf(
+                    navArgument("modelId") {
+                        type = NavType.StringType
+                    }
+                )
             ) { backStackEntry ->
-                val projectId = backStackEntry.arguments?.getLong("projectId") ?: 0L
-                ProjectDetailScreen(projectId = projectId, navController = navController)
+                val modelId = backStackEntry.arguments?.getString("modelId") ?: ""
+
+                ImageModelRunScreen(
+                    modelId = modelId,
+                    navController = navController
+                )
+            }
+            composable(Screen.ImageModelUpscale.route) {
+                ImageModelUpscaleScreen(navController)
             }
 
             composable(
-                route = "chat_room/{chatId}",
+                route = Screen.TextAiProjectDetail.route,
+                arguments = listOf(navArgument("projectId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val projectId = backStackEntry.arguments?.getLong("projectId") ?: 0L
+                TextModelProjectDetailScreen(projectId = projectId, navController = navController)
+            }
+
+            composable(
+                route = Screen.TextAiChatRoom.route,
                 arguments = listOf(navArgument("chatId") { type = NavType.LongType })
             ) { backStackEntry ->
                 val chatId = backStackEntry.arguments?.getLong("chatId") ?: 0L

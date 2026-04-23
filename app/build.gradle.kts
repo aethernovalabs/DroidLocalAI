@@ -1,13 +1,13 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
 }
 
 android {
     namespace = "com.aethernovax.droidlocalai"
-    compileSdk = 36
+    compileSdk = 37
+    ndkVersion = "29.0.13113456"
 
     defaultConfig {
         applicationId = "com.aethernovax.droidlocalai"
@@ -24,6 +24,22 @@ android {
         ndk {
             //noinspection ChromeOsAbiSupport
             abiFilters += "arm64-v8a"
+        }
+        externalNativeBuild {
+            cmake {
+                arguments += listOf(
+                    "-DCMAKE_BUILD_TYPE=Release",
+                    "-DBUILD_SHARED_LIBS=ON",
+                    "-DLLAMA_BUILD_COMMON=OFF",
+                    "-DLLAMA_BUILD_EXAMPLES=OFF",
+                    "-DLLAMA_BUILD_TESTS=OFF",
+                    "-DLLAMA_BUILD_SERVER=OFF",
+                    "-DLLAMA_OPENSSL=OFF",
+                    "-DGGML_NATIVE=OFF",
+                    "-DGGML_OPENMP=OFF",
+                    "-DGGML_BACKEND_DL=OFF"
+                )
+            }
         }
     }
 
@@ -62,12 +78,14 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/llama-android/CMakeLists.txt")
+        }
     }
     packaging {
         resources {
@@ -88,12 +106,13 @@ android {
             versionNameSuffix = "_with_filter"
         }
     }
-    applicationVariants.all {
-        val variant = this
-        variant.outputs.all {
-            val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
-            val flavorName = variant.flavorName
-            output.outputFileName = "DroidLocalAI_armv8a_${variant.versionName}.apk"
+}
+
+androidComponents {
+    onVariants { variant ->
+        val version = android.defaultConfig.versionName ?: "unknown"
+        variant.outputs.forEach { output ->
+            output.outputFileName.set("DroidLocalAI_armv8a_$version.apk")
         }
     }
 }
@@ -118,6 +137,7 @@ dependencies {
     implementation(libs.cropify)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.documentfile)
     ksp(libs.androidx.room.compiler)
 
     testImplementation(libs.junit)

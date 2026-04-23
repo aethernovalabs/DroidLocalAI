@@ -30,7 +30,7 @@ import com.aethernovax.droidlocalai.viewmodel.ProjectsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProjectDetailScreen(
+fun TextModelProjectDetailScreen(
     projectId: Long,
     navController: NavController,
     projectsViewModel: ProjectsViewModel = viewModel(),
@@ -179,7 +179,7 @@ fun ProjectDetailScreen(
                 Button(
                     onClick = {
                         chatViewModel.createNewChat(projectId) { chatId ->
-                            navController.navigate("chat_room/$chatId")
+                            navController.navigate(com.aethernovax.droidlocalai.navigation.Screen.TextAiChatRoom.createRoute(chatId))
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -197,7 +197,7 @@ fun ProjectDetailScreen(
             items(history) { session ->
                 ChatHistoryItem(
                     title = session.title,
-                    onOpen = { navController.navigate("chat_room/${session.id}") },
+                    onOpen = { navController.navigate(com.aethernovax.droidlocalai.navigation.Screen.TextAiChatRoom.createRoute(session.id)) },
                     onDelete = { chatViewModel.deleteSession(session) }
                 )
             }

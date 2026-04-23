@@ -236,14 +236,14 @@ class BackgroundGenerationService : Service() {
                     )
                 }
 
-                response.body?.let { responseBody ->
-                    Log.d("BgGenService", "Reading streaming response")
+                val responseBody = response.body
+                Log.d("BgGenService", "Reading streaming response")
 
-                    val reader = BufferedReader(InputStreamReader(responseBody.byteStream()))
-                    var messageCount = 0
+                val reader = BufferedReader(InputStreamReader(responseBody.byteStream()))
+                var messageCount = 0
 
-                    // Read line by line for efficiency
-                    while (isActive) {
+                // Read line by line for efficiency
+                while (isActive) {
                         val readLineStart = System.currentTimeMillis()
                         val line = reader.readLine() ?: break
                         val readLineTime = System.currentTimeMillis() - readLineStart
@@ -409,7 +409,6 @@ class BackgroundGenerationService : Service() {
                                 }
                             }
                         }
-                    }
                 }
             }
         } catch (e: Exception) {

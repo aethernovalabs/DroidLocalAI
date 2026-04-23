@@ -24,7 +24,7 @@ import com.aethernovax.droidlocalai.viewmodel.ProjectsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProjectListScreen(
+fun TextModelProjectListScreen(
     navController: NavController,
     projectsViewModel: ProjectsViewModel = viewModel()
 ) {
@@ -67,7 +67,7 @@ fun ProjectListScreen(
             items(projects) { project ->
                 ProjectItem(
                     project = project,
-                    onClick = { navController.navigate("project_detail/${project.id}") },
+                    onClick = { navController.navigate(com.aethernovax.droidlocalai.navigation.Screen.TextAiProjectDetail.createRoute(project.id)) },
                     onDelete = { projectsViewModel.deleteProject(project) }
                 )
             }

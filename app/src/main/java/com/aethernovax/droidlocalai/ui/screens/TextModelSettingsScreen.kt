@@ -3,13 +3,25 @@ package com.aethernovax.droidlocalai.ui.screens
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Wifi
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,7 +34,7 @@ import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(navController: NavController) {
+fun TextModelSettingsScreen(navController: NavController) {
     Column(modifier = Modifier
         .fillMaxSize()
         .background(Color(0xFF121212))) {
@@ -43,7 +55,7 @@ fun SettingsScreen(navController: NavController) {
                 SettingsItem(
                     icon = Icons.Default.Settings,
                     title = "Model Settings",
-                    onClick = { navController.navigate("llm_settings") }
+                    onClick = { navController.navigate(com.aethernovax.droidlocalai.navigation.Screen.TextAiLlmSettings.route) }
                 )
                 HorizontalDivider(color = Color.White)
                 SettingsItem(

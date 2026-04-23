@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -69,7 +70,7 @@ data class PathData(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InpaintScreen(
+fun ImageModelInpaintScreen(
     originalBitmap: Bitmap,
     existingMaskBitmap: Bitmap? = null,
     existingPathHistory: List<PathData>? = null,
@@ -788,7 +789,7 @@ fun InpaintScreen(
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
                             ) {
                                 Icon(
-                                    Icons.Default.Redo,
+                                    Icons.AutoMirrored.Filled.Redo,
                                     contentDescription = "Redo",
                                     modifier = Modifier.size(ButtonDefaults.IconSize)
                                 )

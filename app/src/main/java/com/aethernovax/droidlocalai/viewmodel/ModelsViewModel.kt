@@ -11,7 +11,10 @@ import com.aethernovax.droidlocalai.data.AppDatabase
 import com.aethernovax.droidlocalai.data.entities.LlmModelEntity
 import com.aethernovax.droidlocalai.engine.LlamaEngine
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 import java.text.DecimalFormat
 
 class ModelsViewModel(application: Application) : AndroidViewModel(application) {
@@ -28,15 +31,20 @@ class ModelsViewModel(application: Application) : AndroidViewModel(application) 
             return
         }
 
-        val fileSize = getFileSize(context, uri) ?: "Unknown Size"
-
         viewModelScope.launch {
+            val storedFile = copyModelToInternalStorage(context, uri, fileName)
+            if (storedFile == null) {
+                Toast.makeText(context, "Gagal mengimpor model GGUF.", Toast.LENGTH_LONG).show()
+                return@launch
+            }
+
             val newModel = LlmModelEntity(
-                name = fileName,
-                path = uri.toString(),
-                size = fileSize
+                name = storedFile.name,
+                path = storedFile.absolutePath,
+                size = formatFileSize(storedFile.length())
             )
             llmModelDao.insertModel(newModel)
+            Toast.makeText(context, "Model ${storedFile.name} berhasil diimpor.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -47,13 +55,11 @@ class ModelsViewModel(application: Application) : AndroidViewModel(application) 
             llmModelDao.selectModel(model.id)
             
             // 2. Try to load it into the engine
-            // Note: In a real app, you might want to do this on a background thread
-            // or inside ChatViewModel when chat starts.
             val success = llamaEngine.loadModelSafe(model.path)
             if (success) {
                 Toast.makeText(context, "Model ${model.name} loaded successfully!", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(context, "Failed to load ${model.name}. Check NDK build.", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Failed to load ${model.name}. Check NDK build and model file.", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -83,6 +89,29 @@ class ModelsViewModel(application: Application) : AndroidViewModel(application) 
         return result
     }
 
+    private suspend fun copyModelToInternalStorage(context: Context, uri: Uri, fileName: String): File? {
+        return withContext(Dispatchers.IO) {
+            runCatching {
+                val modelsDir = File(context.filesDir, "llm-models").apply {
+                    if (!exists()) {
+                        mkdirs()
+                    }
+                }
+
+                val sanitizedName = fileName.replace(Regex("[^A-Za-z0-9._-]"), "_")
+                val targetFile = File(modelsDir, sanitizedName)
+
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    targetFile.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                } ?: return@withContext null
+
+                targetFile
+            }.getOrNull()
+        }
+    }
+
     private fun getFileSize(context: Context, uri: Uri): String? {
         var size: Long = 0
         if (uri.scheme == "content") {
@@ -96,6 +125,10 @@ class ModelsViewModel(application: Application) : AndroidViewModel(application) 
         }
         if (size <= 0) return null
 
+        return formatFileSize(size)
+    }
+
+    private fun formatFileSize(size: Long): String {
         val df = DecimalFormat("#.##")
         return when {
             size < 1024 -> "${size}B"

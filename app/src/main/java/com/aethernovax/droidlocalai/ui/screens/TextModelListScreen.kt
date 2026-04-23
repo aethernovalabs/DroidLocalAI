@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.aethernovax.droidlocalai.ui.screens
 
 import android.content.Context
@@ -128,7 +130,7 @@ private fun DeleteConfirmDialog(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun ModelListScreen(
+fun ImageModelListScreen(
     navController: NavController,
     modifier: Modifier = Modifier
 ) {
@@ -296,7 +298,7 @@ fun ModelListScreen(
                 ) {
                     val context = LocalContext.current
                     val mustReadText = stringResource(R.string.must_read)
-                    val githubUrl = "https://github.com/xororz/DroidLocalAI"
+                    val githubUrl = "https://github.com/xororz/local-dream"
 
                     val annotatedString = buildAnnotatedString {
                         val fullText = mustReadText
@@ -417,7 +419,7 @@ fun ModelListScreen(
                 TextButton(onClick = {
                     val timestamp = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US)
                         .format(Date())
-                    val filename = "droid_local_ai_log_$timestamp.log"
+                    val filename = "local_dream_log_$timestamp.log"
                     scope.launch(Dispatchers.IO) {
                         val savedPath = try {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -426,7 +428,7 @@ fun ModelListScreen(
                                     put(MediaStore.Downloads.MIME_TYPE, "text/plain")
                                     put(
                                         MediaStore.Downloads.RELATIVE_PATH,
-                                        Environment.DIRECTORY_DOWNLOADS + "/DroidLocalAI"
+                                        Environment.DIRECTORY_DOWNLOADS + "/LocalDream"
                                     )
                                 }
                                 val resolver = context.contentResolver
@@ -437,13 +439,13 @@ fun ModelListScreen(
                                 resolver.openOutputStream(uri)?.use { out ->
                                     out.write(capturedLogs.toByteArray(Charsets.UTF_8))
                                 } ?: throw java.io.IOException("openOutputStream failed")
-                                "Downloads/DroidLocalAI/$filename"
+                                "Downloads/LocalDream/$filename"
                             } else {
                                 val dir = File(
                                     Environment.getExternalStoragePublicDirectory(
                                         Environment.DIRECTORY_DOWNLOADS
                                     ),
-                                    "DroidLocalAI"
+                                    "LocalDream"
                                 )
                                 if (!dir.exists()) dir.mkdirs()
                                 val file = File(dir, filename)
@@ -665,7 +667,7 @@ fun ModelListScreen(
             LargeTopAppBar(
                 title = {
                     Column {
-                        Text("DroidLocalAI✨")
+                        Text("Local Dream✨")
                         Text(
                             if (isSelectionMode) stringResource(
                                 R.string.selected_items,
@@ -696,7 +698,7 @@ fun ModelListScreen(
                         Icon(Icons.AutoMirrored.Filled.Help, stringResource(R.string.help))
                     }
                     if (Model.isQualcommDevice()) {
-                        IconButton(onClick = { navController.navigate(Screen.Upscale.route) }) {
+                        IconButton(onClick = { navController.navigate(Screen.ImageModelUpscale.route) }) {
                             Icon(Icons.Default.AutoFixHigh, stringResource(R.string.image_upscale))
                         }
                     }
@@ -817,7 +819,7 @@ fun ModelListScreen(
                                     if (!model.isDownloaded) {
                                         showDownloadConfirm = model
                                     } else {
-                                        navController.navigate(Screen.ModelRun.createRoute(model.id))
+                                        navController.navigate(Screen.ImageModelRun.createRoute(model.id))
                                     }
                                 }
                             },

@@ -29,7 +29,7 @@ import com.aethernovax.droidlocalai.data.entities.LlmModelEntity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ModelsScreen(modelsViewModel: ModelsViewModel = viewModel()) {
+fun TextModelLocalModelsScreen(modelsViewModel: ModelsViewModel = viewModel()) {
     val context = LocalContext.current
     val models by modelsViewModel.models.collectAsState(initial = emptyList())
 

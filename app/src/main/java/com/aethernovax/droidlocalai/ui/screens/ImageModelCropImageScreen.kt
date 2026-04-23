@@ -49,8 +49,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Suppress("UNCHECKED_CAST")
 @Composable
-fun CropImageScreen(
+fun ImageModelCropScreen(
     imageUri: Uri,
     width: Int,
     height: Int,

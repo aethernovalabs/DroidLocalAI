@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.aethernovax.droidlocalai.data.AppDatabase
+import com.aethernovax.droidlocalai.data.GenerationPreferences
 import com.aethernovax.droidlocalai.data.entities.ChatSessionEntity
 import com.aethernovax.droidlocalai.data.entities.MessageEntity
 import com.aethernovax.droidlocalai.engine.LlamaEngine
@@ -17,6 +18,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val projectDao = database.projectDao()
     private val llmModelDao = database.llmModelDao()
     private val llamaEngine = LlamaEngine()
+    private val generationPreferences = GenerationPreferences(application)
 
     val allSessions: Flow<List<ChatSessionEntity>> = chatDao.getAllSessions()
 
@@ -78,8 +80,30 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             if (LlamaEngine.isLibraryLoaded) {
                 val selectedModel = llmModelDao.getSelectedModel()
                 if (selectedModel != null) {
-                    // Try loading if not already loaded (implementation simplified)
-                    llamaEngine.loadModelSafe(selectedModel.path)
+                    val llmSettings = generationPreferences.llmSettings.first()
+                    val loadSuccess = llamaEngine.loadModelSafe(
+                        modelPath = selectedModel.path,
+                        contextSize = llmSettings.contextSize
+                    )
+                    if (!loadSuccess) {
+                        chatDao.insertMessage(
+                            MessageEntity(
+                                chatId = chatId,
+                                role = "assistant",
+                                content = "Error: gagal memuat model chat. Pastikan file GGUF valid dan library native berhasil dibuild."
+                            )
+                        )
+                        return@launch
+                    }
+                } else {
+                    chatDao.insertMessage(
+                        MessageEntity(
+                            chatId = chatId,
+                            role = "assistant",
+                            content = "Error: belum ada model chat yang dipilih."
+                        )
+                    )
+                    return@launch
                 }
             }
 
@@ -115,7 +139,12 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
             // 4. Call Llama Engine
             val aiResponse = if (LlamaEngine.isLibraryLoaded) {
-                llamaEngine.generateResponseSafe(fullPrompt) { token ->
+                val llmSettings = generationPreferences.llmSettings.first()
+                llamaEngine.generateResponseSafe(
+                    prompt = fullPrompt,
+                    maxTokens = llmSettings.maxTokens,
+                    temperature = llmSettings.temperature
+                ) { token ->
                     // TODO: Update UI in real-time
                 }
             } else {

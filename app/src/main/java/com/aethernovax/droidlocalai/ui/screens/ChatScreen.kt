@@ -40,7 +40,7 @@ fun ChatListScreen(
             onDismiss = { showNewChatDialog = false },
             onProjectSelected = { projectId ->
                 chatViewModel.createNewChat(projectId) { chatId ->
-                    navController.navigate("chat_room/$chatId")
+                    navController.navigate(com.aethernovax.droidlocalai.navigation.Screen.TextAiChatRoom.createRoute(chatId))
                 }
                 showNewChatDialog = false
             }
@@ -68,7 +68,7 @@ fun ChatListScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { navController.navigate("chat_room/${session.id}") },
+                        .clickable { navController.navigate(com.aethernovax.droidlocalai.navigation.Screen.TextAiChatRoom.createRoute(session.id)) },
                     colors = CardDefaults.cardColors(containerColor = Color(0xFF222222))
                 ) {
                     Row(
