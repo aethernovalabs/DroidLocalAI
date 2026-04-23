@@ -132,6 +132,7 @@ Java_com_aethernovax_droidlocalai_engine_LlamaEngine_loadModel(
         return JNI_FALSE;
     }
 
+    LOGI("Model loaded successfully with context size %d", ctx_params.n_ctx);
     return JNI_TRUE;
 }
 
@@ -187,12 +188,15 @@ Java_com_aethernovax_droidlocalai_engine_LlamaEngine_generateResponse(
     const float temp = temperature > 0.0f ? temperature : DEFAULT_TEMPERATURE;
     llama_sampler * sampler = llama_sampler_init_temp(temp);
 
+    LOGI("Starting generation with max_tokens=%d, temperature=%.2f", token_limit, temp);
+
     std::string response;
     response.reserve(static_cast<size_t>(token_limit) * 4);
 
     for (int i = 0; i < token_limit; ++i) {
-        const llama_token next_token = llama_sampler_sample(sampler, g_ctx, -1);
+        const llama_token next_token = llama_sampler_sample(sampler, g_ctx, 0);
         if (llama_token_is_eog(vocab, next_token)) {
+            LOGI("End of generation reached at token %d", i);
             break;
         }
 
