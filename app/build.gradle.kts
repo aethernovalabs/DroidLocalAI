@@ -84,7 +84,7 @@ android {
     }
     externalNativeBuild {
         cmake {
-            path = file("src/main/cpp/llama-android/CMakeLists.txt")
+            path = file("src/main/cpp/CMakeLists.txt")
         }
     }
     packaging {
