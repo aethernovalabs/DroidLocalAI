@@ -80,6 +80,7 @@ fun TextModelLocalModelsScreen(modelsViewModel: ModelsViewModel = viewModel()) {
                 ModelItem(
                     model = model,
                     onLoad = { modelsViewModel.selectAndLoadModel(context, model) },
+                    onUnload = { modelsViewModel.unloadCurrentModel() },
                     onDelete = { modelsViewModel.removeModel(model) }
                 )
             }
@@ -99,7 +100,7 @@ fun TextModelLocalModelsScreen(modelsViewModel: ModelsViewModel = viewModel()) {
 }
 
 @Composable
-fun ModelItem(model: LlmModelEntity, onLoad: () -> Unit, onDelete: () -> Unit) {
+fun ModelItem(model: LlmModelEntity, onLoad: () -> Unit, onUnload: () -> Unit, onDelete: () -> Unit) {
     Card(
         colors = CardDefaults.cardColors(
             containerColor = if (model.isSelected) Color(0xFF1E3A3A) else Color(0xFF222222)
@@ -141,6 +142,14 @@ fun ModelItem(model: LlmModelEntity, onLoad: () -> Unit, onDelete: () -> Unit) {
                                 fontSize = 12.sp,
                                 modifier = Modifier.padding(start = 4.dp)
                             )
+                        }
+                        Button(
+                            onClick = onUnload,
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                            modifier = Modifier.height(32.dp).padding(end = 4.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                        ) {
+                            Text("Unload", color = Color.White, fontSize = 12.sp)
                         }
                     } else {
                         Button(

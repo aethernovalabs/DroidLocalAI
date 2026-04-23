@@ -64,10 +64,14 @@ class LlamaEngine {
         onTokenReceived: (String) -> Unit
     ): String {
         if (!isLibraryLoaded) return "Error: Library not loaded"
+        if (prompt.isBlank()) return "Error: Empty prompt"
         return try {
             generateResponse(prompt, maxTokens, temperature, onTokenReceived)
         } catch (e: UnsatisfiedLinkError) {
             "Error: Native method not found"
+        } catch (e: Exception) {
+            Log.e(TAG, "Unexpected error during generation", e)
+            "Error: Generation failed - ${e.message}"
         }
     }
 

@@ -140,13 +140,16 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             // 4. Call Llama Engine
             val aiResponse = if (LlamaEngine.isLibraryLoaded) {
                 val llmSettings = generationPreferences.llmSettings.first()
-                llamaEngine.generateResponseSafe(
+                Log.d("ChatViewModel", "Generating response with maxTokens=${llmSettings.maxTokens}, temperature=${llmSettings.temperature}")
+                val response = llamaEngine.generateResponseSafe(
                     prompt = fullPrompt,
                     maxTokens = llmSettings.maxTokens,
                     temperature = llmSettings.temperature
                 ) { token ->
                     // TODO: Update UI in real-time
                 }
+                Log.d("ChatViewModel", "Generated response: ${response.take(100)}...")
+                response
             } else {
                 "Error: AI Engine (llama.cpp) library failed to load. Please check your NDK build."
             }

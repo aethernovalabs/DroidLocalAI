@@ -50,17 +50,34 @@ class ModelsViewModel(application: Application) : AndroidViewModel(application) 
 
     fun selectAndLoadModel(context: Context, model: LlmModelEntity) {
         viewModelScope.launch {
-            // 1. Update selection in DB
+            // 1. Unload current model if any
+            unloadCurrentModel()
+
+            // 2. Update selection in DB
             llmModelDao.deselectAll()
             llmModelDao.selectModel(model.id)
             
-            // 2. Try to load it into the engine
+            // 3. Try to load the new model
             val success = llamaEngine.loadModelSafe(model.path)
             if (success) {
                 Toast.makeText(context, "Model ${model.name} loaded successfully!", Toast.LENGTH_SHORT).show()
             } else {
+                // If load failed, deselect the model
+                llmModelDao.deselectAll()
                 Toast.makeText(context, "Failed to load ${model.name}. Check NDK build and model file.", Toast.LENGTH_LONG).show()
             }
+        }
+    }
+
+    fun unloadCurrentModel() {
+        viewModelScope.launch {
+            // Unload from engine
+            llamaEngine.unloadModelSafe()
+            
+            // Deselect in DB
+            llmModelDao.deselectAll()
+            
+            // Note: Toast will be shown in UI if needed, but since this is called from UI, maybe not necessary
         }
     }
 
